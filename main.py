@@ -1,7 +1,7 @@
 import io
 
 import docx2txt
-from flask import Flask, render_template_string, request
+from flask import Flask, render_template_string, request, jsonify
 from nltk.corpus import stopwords
 from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter, PDFResourceManager
@@ -63,6 +63,7 @@ HTML_TEMPLATE = """
   <input type=submit value=Upload>
 </form>
 """
+text_data = []
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -78,6 +79,11 @@ def upload_file():
         if text_input:
             return f"matched about : {score}%"
     return render_template_string(HTML_TEMPLATE)
+
+
+@app.route("/api/textdata", methods=["GET"])
+def get_text_data():
+    return jsonify(text_data)
 
 
 if __name__ == "__main__":
