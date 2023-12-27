@@ -7,6 +7,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from uagents import Agent, Context, Model
 
+from .job_desc import job_desc
+
 
 class Message(Model):
     message: str
@@ -16,6 +18,7 @@ def get_resume_score(text):
     cv = CountVectorizer(stop_words="english")
     count_matrix = cv.fit_transform(text)
     matchPercentage = cosine_similarity(count_matrix)[0][1] * 100
+    print(matchPercentage)
     matchPercentage = round(matchPercentage, 2)  # round to two decimal
     return matchPercentage
 
@@ -46,22 +49,25 @@ agent1 = Agent(
 
 @agent1.on_event("startup")
 async def start(ctx: Context):
-    resume = input("enter file")
-    jd = input("enter jd")
-    print(resume, jd)
+    resume = input("enter file \n")
+    jd = job_desc
     resume_text = read_pdf_resume(resume)
-    # job_description_text = args.job_description
-
     score = get_resume_score([resume_text, jd])
 
-    # Send score to Agent2 (Replace 'agent2_address_here' with the actual address of Agent2)
-    if score < 50:
+    if score >= 50:
         await ctx.send(
             "agent1qdp9j2ev86k3h5acaayjm8tpx36zv4mjxn05pa2kwesspstzj697xy5vk2a",
-            Message(message=f"Score is {score}, send email"),
+            Message(
+                message=f"Accepted with score above 50% \n. Your score is {score} %"
+            ),
         )
     else:
-        print(f"Score is {score}, no need to send email")
+        await ctx.send(
+            "agent1qdp9j2ev86k3h5acaayjm8tpx36zv4mjxn05pa2kwesspstzj697xy5vk2a",
+            Message(
+                message=f"Rejected with score below 50% \n. Your score is {score} %"
+            ),
+        )
 
 
 if __name__ == "__main__":
