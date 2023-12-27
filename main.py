@@ -1,19 +1,13 @@
 import io
-import operator
-import re
 
 import docx2txt
-import matplotlib.pyplot as plt
 from flask import Flask, render_template_string, request
 from nltk.corpus import stopwords
-from nltk.probability import FreqDist
-from nltk.tokenize import word_tokenize
 from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter, PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from wordcloud import WordCloud
 
 # Docx resume
 # Wordcloud
@@ -47,51 +41,6 @@ def read_word_resume(word_doc):
         return text
 
 
-def clean_job_decsription(jd):
-    """a function to create a word cloud based on the input text parameter"""
-    ## Clean the Text
-    # Lower
-    clean_jd = jd.lower()
-    # remove punctuation
-    clean_jd = re.sub(r"[^\w\s]", "", clean_jd)
-    # remove trailing spaces
-    clean_jd = clean_jd.strip()
-    # remove numbers
-    clean_jd = re.sub("[0-9]+", "", clean_jd)
-    # tokenize
-    clean_jd = word_tokenize(clean_jd)
-    # remove stop words
-    stop = stopwords.words("english")
-    clean_jd = [w for w in clean_jd if not w in stop]
-    return clean_jd
-
-
-def create_word_cloud(jd):
-    corpus = jd
-    FreqDist(corpus)
-    # print(fdist.most_common(100))
-    words = " ".join(corpus)
-    words = words.split()
-
-    # create a empty dictionary
-    data = dict()
-    #  Get frequency for each words where word is the key and the count is the value
-    for word in words:
-        word = word.lower()
-        data[word] = data.get(word, 0) + 1
-    # Sort the dictionary in reverse order to print first the most used terms
-    dict(sorted(data.items(), key=operator.itemgetter(1), reverse=True))
-    word_cloud = WordCloud(
-        width=800, height=800, background_color="white", max_words=500
-    )
-    word_cloud.generate_from_frequencies(data)
-    plt.figure(figsize=(10, 8), edgecolor="k")
-    plt.imshow(word_cloud, interpolation="bilinear")
-    plt.axis("off")
-    plt.tight_layout(pad=0)
-    # plt.show()
-
-
 def get_resume_score(text):
     cv = CountVectorizer(stop_words="english")
     count_matrix = cv.fit_transform(text)
@@ -102,12 +51,6 @@ def get_resume_score(text):
     matchPercentage = cosine_similarity(count_matrix)[0][1] * 100
     matchPercentage = round(matchPercentage, 2)  # round to two decimal
     return matchPercentage
-
-    # print(
-    #     "Your resume matches about "
-    #     + str(matchPercentage)
-    #     + "% of the job description."
-    # )
 
 
 HTML_TEMPLATE = """
@@ -130,8 +73,6 @@ def upload_file():
         filename = file.filename
         file.save(filename)
         resume = read_pdf_resume(f"./{filename}")
-        clean_jd = clean_job_decsription(text_input)
-        create_word_cloud(clean_jd)
         text = [resume, text_input]
         score = get_resume_score(text)
         if text_input:
